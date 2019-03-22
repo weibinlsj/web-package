@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+
+	<body>
+		<script type="text/javascript">
+			// 提交表单数据到后台处理
+			$.ajax({
+				type: "post",
+				data: studentInfo,
+				contentType: "application/json",
+				url: "/Home/Submit",
+				beforeSend: function() {
+					// 禁用按钮防止重复提交
+					$("#submit").attr({
+						disabled: "disabled"
+					});
+				},
+				success: function(data) {
+					if(data == "Success") {
+						//清空输入框
+						clearBox();
+					}
+				},
+				complete: function() {
+					$("#submit").removeAttr("disabled");
+				},
+				error: function(data) {
+					console.info("error: " + data.responseText);
+				}
+			});
+			//加载中..
+			$.ajax({
+				type: "post",
+				contentType: "application/json",
+				url: "/Home/GetList",
+				beforeSend: function() {
+					$("loading").show();
+				},
+				success: function(data) {
+					if(data == "Success") {
+						// ...
+					}
+				},
+				complete: function() {
+					$("loading").hide();
+				},
+				error: function(data) {
+					console.info("error: " + data.responseText);
+				}
+			});
+		</script>
+		<script type="text/javascript">
+			
+	var opts = {
+            lines: 13, // 花瓣数目
+            length: 20, // 花瓣长度
+            width: 10, // 花瓣宽度
+            radius: 30, // 花瓣距中心半径
+            corners: 1, // 花瓣圆滑度 (0-1)
+            rotate: 0, // 花瓣旋转角度
+            direction: 1, // 花瓣旋转方向 1: 顺时针, -1: 逆时针
+            color: '#5882FA', // 花瓣颜色
+            speed: 1, // 花瓣旋转速度
+            trail: 60, // 花瓣旋转时的拖影(百分比)
+            shadow: false, // 花瓣是否显示阴影
+            hwaccel: false, //spinner 是否启用硬件加速及高速旋转
+            className: 'spinner', // spinner css 样式名称
+            zIndex: 2e9, // spinner的z轴 (默认是2000000000)
+            top: '50%', // spinner 相对父容器Top定位 单位 px
+            left: '50%'// spinner 相对父容器Left定位 单位 px
+        };
+	var spinner = new Spinner(opts);
+	//修改封面
+	function updateWHImg() {
+		console.log("img_whid:"+$("#wh_img_id").val());
+		var formData = new FormData($("#imgForm")[0]);
+		$.ajax({
+	        type: "POST",
+	        url: "https://e.vhall.com/api/vhallapi/v2/webinar/activeimage",
+	        data:formData,
+	        dataType: "json",
+	        async: false,
+	        contentType: false,
+	        processData: false,
+	        success: function (data) {
+	        	console.log(data);
+	        }
+	    });
+	}
+	
+	//修改附件
+	function updateWHFj() {
+		console.log("wh_fj_id:"+$("#wh_fj_id").val());
+		var formData = new FormData($("#fjForm")[0]);
+		$.ajax({
+	        type: "POST",
+	        url: "https://e.vhall.com/api/vhallapi/v2/webinar/doc",
+	        data:formData,
+	        dataType: "json",
+	        async: false,
+	        contentType: false,
+	        processData: false,
+	        success: function (data) {
+	        	console.log(data);
+	        }
+	    });
+	}
+	
+ 	function clickfengmian() {
+		$("#wh_image").click();
+	} 
+ 	
+ 	function clickFj() {
+		$("#wh_fj").click();
+	}
+	
+	//上传封面
+	function updateImg() {
+		if(checkImg()==true){
+			var formData = new FormData($("#imgForm")[0]);
+			$.ajax({
+				type: "POST", 
+				dataType: "text", 
+		        url: "/common/zbUpImg",
+		        data: formData,
+		        cache: false, 
+		        contentType: false, 
+		        processData: false, 
+		        beforeSend:function () {
+                    $("#myspin").text("");
+                    var target = $("#myspin").get(0);
+                    spinner.spin(target);
+                },
+		        success: function (result) {
+		        	var url=result.split(',')[1];
+		        	$("#imgUrl").val(url);
+		        	$('.live_cover').css('background-image','url('+url+')');
+		        	setTimeout(function () {
+	                    spinner.spin();
+	                },300);
+		        }
+		    });
+			 } 
+	}
+	
+	//上传附件
+	function updateFj() {
+		if(checkFj()==true){
+			var formData = new FormData($("#fjForm")[0]);
+			$.ajax({
+				type: "POST", 
+				dataType: "text", 
+		        url: "/common/zbUpFj",
+		        data: formData,
+		        cache: false, 
+		        contentType: false, 
+		        processData: false, 
+		        beforeSend:function () {//ajax处理之前出现spin图标
+                    //异步请求时spinner出现
+                    $("#myspin").text("");
+                    var target = $("#myspin").get(0);
+                    spinner.spin(target);//显示loading图标
+                },
+		        success: function (result) {
+		        	var name=result.split(',')[0];
+		        	var url=result.split(',')[1];
+		        	$("#fjUrl").val(url);
+		        	$("#wd_name").val(name);
+			        setTimeout(function () {
+	                    spinner.spin();
+	                },300);
+		        },
+		    });
+			 } 
+	}
+	
+	//校验图片格式
+	function checkImg() {
+		 var file = $("#wh_image").val();
+	     if (file == "") {  
+				layer.msg('请选择要上传的文件', function(){});
+			return false;
+	     } else {  
+	         //检验文件类型是否正确  
+	         var exec = (/[.]/.exec(file)) ? /[^.]+$/.exec(file.toLowerCase()) : ''; 
+	          if (exec != "jpg" && exec != "png") {  
+	  			layer.msg('文件格式不对，请上传jpg、png文件!', function(){});
+				return false;
+	         }   
+	     }  
+	     return true;  
+	}
+	
+	//校验附件格式
+	function checkFj() {
+		 var file = $("#wh_fj").val();
+	     if (file == "") {  
+				layer.msg('请选择要上传的文件', function(){});
+			return false;
+	     } else {  
+	         //检验文件类型是否正确  
+	         var exec = (/[.]/.exec(file)) ? /[^.]+$/.exec(file.toLowerCase()) : ''; 
+	          if (exec != "doc" && exec != "docx" && exec != "xls" && exec != "xlsx" && exec != "ppt" && exec != "pptx" && exec != "pdf" && exec != "jpeg" && exec != "jpg" && exec != "png" && exec != "bmp") {  
+	  			layer.msg('文件格式不对，请上传doc/docx、xls/xlsx、ppt/pptx、pdf、jpeg/jpg、png、bmp文件!', function(){});
+				return false;
+	         }   
+	     }  
+	     return true;  
+	}
+	
+	
+	
+	
+		layui.use(['form','laydate'], function(){
+			var form = layui.form,
+				laydate = layui.laydate;
+
+			form.on('select(layout)',function(data){
+				if(data.value == '2' || data.value == '3'){
+					$('#lineWordJs').css('display','block');
+				}else {
+					$('#lineWordJs').css('display','none');
+				}
+			})
+			form.on('radio(price)', function(data){
+				if(data.value==0){
+					  $("#mszb_pick").val("0"); 
+					  $('#payBoxJs').css('display','none');
+				   }else{
+					  $("#mszb_pick").val(0); 
+					  $('#payBoxJs').css('display','inline-block');
+				   }
+			})
+
+			laydate.render({
+				elem: '#date',
+				format: 'yyyy-MM-dd',
+				theme: '#18cb7c',
+				min: new Date().getFullYear()+'-'+(new Date().getMonth()+1)+'-'+new Date().getDate()
+			});
+
+			//时间选择器
+			laydate.render({
+				elem: '#time',
+				type: 'time',
+				theme: '#18cb7c'
+			});
+
+		})
+	
+		</script>
+	</body>
+
+</html>
